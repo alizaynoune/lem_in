@@ -6,7 +6,7 @@
 /*   By: alzaynou <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/31 13:06:55 by alzaynou          #+#    #+#             */
-/*   Updated: 2019/12/26 19:27:49 by alzaynou         ###   ########.fr       */
+/*   Updated: 2020/02/12 10:57:14 by alzaynou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,6 +58,7 @@ typedef struct	s_flags
 /*
 ** Functions
 */
+
 int				ft_printf(const char *format, ...);
 t_flags			ft_print_flags(t_flags flags, char c, unsigned int flag);
 t_flags			ft_read_flag(const char *format, va_list ap, t_flags flags);

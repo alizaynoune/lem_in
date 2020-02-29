@@ -5,159 +5,57 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: alzaynou <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2020/01/05 17:52:45 by alzaynou          #+#    #+#             */
-/*   Updated: 2020/01/09 22:00:41 by alzaynou         ###   ########.fr       */
+/*   Created: 2020/01/23 15:20:33 by alzaynou          #+#    #+#             */
+/*   Updated: 2020/02/11 23:34:33 by akhossan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/lem_in.h"
+#include "lemin.h"
 
-t_vist		*free_other_roms(t_vist *nvist, t_lst *new)
+void	free_rooms(t_room *rooms)
 {
-	t_lst	*tmp0;
-	t_lst	*tmp1;
+	t_room		*ptr;
+	t_room		*tmp;
 
-	tmp0 = nvist->lst;
-	while (tmp0)
+	tmp = rooms;
+	while (tmp)
 	{
-		tmp1 = tmp0;
-		tmp0 = tmp0->next;
-		free(tmp1);
-	}
-	nvist->lst = new;
-	nvist->bck = new;
-	return (nvist);
-}
-
-t_stack		*free_stack(t_stack *stack)
-{
-	t_stack *tmp;
-
-	tmp = stack;
-	stack = stack->prev;
-	free(tmp);
-	return (stack);
-}
-
-t_vist		*free_vist(t_vist *vist)
-{
-	t_vist	*tmp;
-	t_vist	*ret;
-	t_lst	*lst;
-	t_lst   *tlst;
-
-	if (vist)
-		ret = vist->prev;
-	if (ret)
-		ret->next = NULL;
-	while (vist)
-	{
-		lst = vist->bck;
-		while (lst)
-		{
-			tlst = lst;
-			lst = lst->next;
-			free(tlst);
-		}
-		tmp = vist;
-		vist = vist->next;;
-		free(tmp);
-	}
-	return (ret);
-}
-
-void		free_paths(t_paths *path)
-{
-	t_stack	*lst;
-	t_paths	*tmp;
-	t_stack	*tlst;
-
-	while (path)
-	{
-		tmp = path;
-		lst = path->path;
-		while (lst)
-		{
-			tlst = lst;
-			lst = lst->next;
-			free(tlst);
-		}
-		path = path->next;
-		free(tmp);
+		ptr = tmp;
+		tmp = tmp->next;
+		ft_strdel(&ptr->name);
+		free(ptr);
 	}
 }
 
-void		free_p_roms(t_roms *roms, int len)
+void	free_vertex(t_vertex *vertex, uint16_t size)
 {
-	t_roms	*tmp;
-	t_roms	*tmp1;
-	int		cnt;
+	uint16_t	cnt;
+	t_adj		*ptr;
+	t_adj		*tmp;
 
 	cnt = 0;
-	while (cnt < len)
+	while (cnt < size)
 	{
-		tmp = roms[cnt].childe;
-		tmp1 = roms[cnt].childe;
-		free(roms[cnt].name);
+		tmp = vertex[cnt].adj;
 		while (tmp)
 		{
-			if (tmp1)
-				tmp1 = tmp1->childe;
-			free(tmp->name);
-			free(tmp);
-			tmp = tmp1;
+			ptr = tmp;
+			tmp = tmp->next;
+			free(ptr);
 		}
+		ft_strdel(&vertex[cnt].name);
 		cnt++;
 	}
-	free(roms);
+	free(vertex);
+	vertex = NULL;
 }
 
-void		free_lines(t_lines *lines)
+void	free_tab(char **tab, int8_t start)
 {
-	t_lines *tmp;
+	int8_t	cnt;
 
-	while (lines)
-	{
-		tmp = lines;
-		lines = lines->next;
-		free(tmp->line);
-		free(tmp);
-	}
-}
-
-void		free_tab(char **tab, int start)
-{
-	while (tab && tab[start])
-		free(tab[start++]);
+	cnt = start;
+	while (tab[cnt])
+		ft_strdel(&tab[cnt++]);
 	free(tab);
-}
-
-void		free_roms(t_roms *roms)
-{
-	t_roms *tmp;
-
-	tmp = roms;
-	while (tmp)
-	{
-		if (roms)
-			roms = roms->childe;
-		free(tmp);
-		tmp = roms;
-	}
-}
-
-void        free_roms_error(t_roms *roms)
-{
-	t_roms *tmp;
-
-	tmp = roms;
-	while (tmp)
-	{
-		if (roms)
-			roms = roms->childe;
-		free(tmp->name);
-		free(tmp);
-		tmp = roms;
-	}
-
 }

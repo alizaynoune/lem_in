@@ -5,59 +5,57 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: alzaynou <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2020/01/05 00:41:13 by alzaynou          #+#    #+#             */
-/*   Updated: 2020/01/09 00:46:08 by alzaynou         ###   ########.fr       */
+/*   Created: 2020/01/23 18:49:40 by alzaynou          #+#    #+#             */
+/*   Updated: 2020/02/13 23:36:14 by akhossan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/lem_in.h"
+#include "lemin.h"
 
-void	print_lines(t_lines *lines)
+void		printf_file(t_data *d)
 {
-	t_lines *tmp;
-	tmp = lines;
-	while (tmp)
+	close(d->fd);
+	d->fd = open(".tmp", O_RDONLY);
+	while (get_next_line(d->fd, &d->line) > 0)
 	{
-		ft_printf("%s\n", tmp->line);
-		tmp = tmp->next;
+		ft_printf("%s\n", d->line);
+		ft_strdel(&d->line);
+		ft_strdel(&d->line);
 	}
+	ft_printf("\n");
+	close(d->fd);
 }
 
-void	print_roms(t_roms *roms, int n)
+void		print_paths(t_graph *g, t_paths *p)
 {
-	int cnt = 0;
-	t_roms *tmp;
-	while (cnt < n)
+	t_adjp	*path;
+
+	ft_printf("\n");
+	while (p)
 	{
-		tmp = roms[cnt].childe;
-		if (!roms[cnt].childe)
-			ft_printf("NULL");
-		ft_printf("[%s]", roms[cnt].name);
-		while(tmp)
+		path = p->p;
+		if (p->ants_cpy)
 		{
-			ft_printf(" => [%s]", tmp->name);
-			tmp = tmp->childe;
+			ft_printf("%s[%d]: ", GREEN, p->ants_cpy);
+			while (path)
+			{
+				ft_printf("(%s)", g->vertex[path->index].name);
+				if (path->next)
+					ft_printf("==>");
+				path = path->next;
+			}
+			ft_printf("\n");
 		}
-		cnt++;
-		ft_printf("\n");
+		p = p->next;
 	}
+	ft_printf("%s", DEFAULT);
 }
 
-void    print_not_vist(t_paths *lst, t_roms *roms)
+void		reset_used(t_vertex *v, t_queue *q, uint16_t len)
 {
-	t_stack *tmp;
-	t_paths *tmp1;
-	tmp1 = lst;
-	while (tmp1)
-	{
-		tmp = tmp1->path;
-		while (tmp)
-		{
-			ft_printf("[%s]=>", roms[tmp->index].name);
-			tmp = tmp->next;
-		}
-		ft_printf(" %d \n", tmp1->n_roms);
-		tmp1 = tmp1->next;
-	}
-}
+	uint16_t	cnt;
 
+	cnt = 0;
+	while (cnt < len)
+		v[q[cnt++].index].used2 = 0;
+}

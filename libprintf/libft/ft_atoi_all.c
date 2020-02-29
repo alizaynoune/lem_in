@@ -1,22 +1,37 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_strdel.c                                        :+:      :+:    :+:   */
+/*   ft_atoi_all.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: alzaynou <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2019/04/02 23:05:41 by alzaynou          #+#    #+#             */
-/*   Updated: 2020/01/23 18:51:54 by alzaynou         ###   ########.fr       */
+/*   Created: 2020/01/20 00:38:57 by alzaynou          #+#    #+#             */
+/*   Updated: 2020/01/20 02:33:03 by alzaynou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/libft.h"
 
-void	ft_strdel(char **as)
+int			ft_atoi_all(char *str)
 {
-	if (as != NULL)
+	int		sing;
+	int		num;
+	int		cnt;
+
+	cnt = 0;
+	num = 0;
+	if (!str)
+		return (0);
+	sing = str[cnt] == '-' ? -1 : 1;
+	if (str[cnt] == '-' || str[cnt] == '+')
+		cnt++;
+	while (str[cnt] && str[cnt] >= '0' && str[cnt] <= '9')
 	{
-		free(*as);
-		*as = NULL;
+		num = (num * 10) + (str[cnt] - '0');
+		cnt++;
 	}
+	while (str[cnt] && (str[cnt] == ' ' || str[cnt] == '	'))
+		cnt++;
+	num = !str[cnt] ? num * sing : 0;
+	return (num);
 }

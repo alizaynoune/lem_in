@@ -5,183 +5,118 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: alzaynou <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2020/01/06 10:27:58 by alzaynou          #+#    #+#             */
-/*   Updated: 2020/01/12 22:09:16 by alzaynou         ###   ########.fr       */
+/*   Created: 2020/01/29 06:14:09 by alzaynou          #+#    #+#             */
+/*   Updated: 2020/02/11 23:37:22 by akhossan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/lem_in.h"
+#include "../include/lemin.h"
 
-t_paths		*find_paths(t_roms *roms, t_paths *head, int start, int end)
+void		get_paths(t_graph *g, t_data *d, t_paths **p)
 {
-	t_vist	*vist;
-	t_stack	*stack;
-	t_stack	*tstk;
+	t_queue		*q;
 
-	vist = rom_not_vist(NULL, roms[start].childe , NULL, end);
-	stack = push_to_stack(start, NULL);
-	while (vist)
+	if (!(q = (t_queue *)ft_memalloc(sizeof(t_queue) * g->size)))
+		error_malloc2(*p, g, NULL, d);
+	while (1)
 	{
-		if (vist->lst)
+		ft_bzero(q, sizeof(t_queue));
+		q[0].index = g->start;
+		q[0].from = -1;
+		g->vertex[g->start].used2 = 1;
+		if (!bfs_get_path(g, &*p, q, d))
+			break ;
+	}
+	free(q);
+}
+
+int			bfs_get_path(t_graph *g, t_paths **p, t_queue *q, t_data *d)
+{
+	t_adjp		*newp;
+	uint16_t	curr;
+	uint16_t	lq;
+	uint16_t	lp;
+
+	curr = 0;
+	lq = 1;
+	lp = 0;
+	while (curr < lq)
+	{
+		if (q[curr].index == g->end)
 		{
-			start = vist->lst->index;
-			stack = push_to_stack(start, stack);
-			vist->lst = vist->lst->next;
-			if (stack && stack->index == end)
-				head = get_paths(stack, head);
-			if ((stack->index != end) || (vist && !vist->lst))
-				vist = rom_not_vist(vist, roms[stack->index].childe, stack, end);
-			else
-				stack = free_stack(stack);
+			reset_used(g->vertex, q, lq);
+			if (!(newp = get_path(q, g, curr, &lp)))
+				error_malloc2(*p, g, q, d);
+			if (!(push_path(newp, p, lp)))
+				error_malloc2(*p, g, q, d);
+			return (1);
 		}
-		if ((vist && !vist->lst) || (stack && stack->index == end))
+		push_to_q(q, g, curr++, &lq);
+	}
+	reset_used(g->vertex, q, lq);
+	return (0);
+}
+
+static void	update_flow3(t_adj *adj, uint16_t index, int plus)
+{
+	while (adj)
+	{
+		if (adj->index == index)
 		{
-			stack = free_stack(stack);
-			vist = free_vist(vist);
+			adj->flow2 += plus;
+			break ;
 		}
+		adj = adj->next;
+	}
+}
+
+t_adjp		*get_path(t_queue *q, t_graph *g, uint16_t curr, uint16_t *lp)
+{
+	t_adjp		*new;
+	t_adjp		*head;
+
+	head = NULL;
+	while (curr >= 0)
+	{
+		if (!(new = (t_adjp *)ft_memalloc(sizeof(t_adjp))))
+			return (NULL);
+		new->index = q[curr].index;
+		if (q[curr].index != g->end)
+			g->vertex[q[curr].index].used2 = 1;
+		new->next = head;
+		if (head)
+			head->prev = new;
+		head = new;
+		*lp += 1;
+		if (q[curr].from == -1)
+		{
+			update_flow3(g->vertex[q[0].index].adj, q[curr].index, 1);
+			break ;
+		}
+		update_flow3(g->vertex[q[q[curr].from].index].adj, q[curr].index, 1);
+		curr = q[curr].from;
 	}
 	return (head);
 }
 
-t_paths		*get_paths(t_stack *stack, t_paths *head)
+int			push_path(t_adjp *new, t_paths **p, uint16_t lp)
 {
-	t_paths		*new;
+	t_paths		*newp;
 	t_paths		*tmp;
 
-	tmp = head;
-	new = (t_paths *)malloc(sizeof(t_paths));
-	new->next = NULL;
-	new->n_roms = 0;
-	new->path = stack_to_path(stack, &new->n_roms);
-	if (!head)
-		return (new);
-	while (tmp->next)
+	tmp = *p;
+	if (!(newp = (t_paths *)ft_memalloc(sizeof(t_paths))))
+	{
+		free_one_path(new);
+		return (0);
+	}
+	newp->lp = lp;
+	newp->p = new;
+	while (tmp && tmp->next)
 		tmp = tmp->next;
-	tmp->next = new;
-	return (head);
-}
-
-t_stack		*stack_to_path(t_stack *stack, int	*nbr)
-{
-	t_stack	*new;
-	t_stack	*tmp0;
-	t_stack	*tmp1;
-
-	tmp0 = stack;
-	tmp1 = NULL;
-	while (tmp0)
-	{
-		new = (t_stack *)malloc(sizeof(t_stack));
-		new->next = NULL;
-		new->prev = NULL;
-		new->index = tmp0->index;
-		if (tmp1)
-		{
-			tmp1->prev = new;
-			new->next = tmp1;
-		}
-
-		tmp1 = new;
-		*nbr += 1;
-		tmp0 = tmp0->prev;
-	}
-	return (tmp1);
-}
-
-t_stack		*push_to_stack(int index, t_stack *stack)
-{
-	t_stack *new;
-
-	new = (t_stack *)malloc(sizeof(t_stack));
-	new->index = index;
-	new->next = NULL;
-	new->prev = stack;
-	if (stack)
-		stack->next = new;
-	return (new);
-}
-
-t_vist		*rom_not_vist(t_vist *vist, t_roms *roms, t_stack *stack, int end)
-{
-	t_lst	*new;
-	t_vist	*nvist;
-
-	nvist = (t_vist *)malloc(sizeof(t_vist));
-	nvist->next = NULL;
-	nvist->prev = vist;
-	if (vist)
-	vist->next = nvist;
-	nvist->lst = NULL;
-	nvist->bck = NULL;
-	while (roms)
-	{
-		if (check_is_vist(roms->index, stack) && check_is_vist2(roms->index, vist))
-		{
-			new = (t_lst *)malloc(sizeof(t_lst));
-			new->index = roms->index;
-			new->next = NULL;
-			new->prev = NULL;
-			if (roms->index == end)
-			{
-				nvist = free_other_roms(nvist, new);
-				break ;
-			}
-			nvist->lst = push_to_lst(nvist->lst, new);
-			nvist->bck = nvist->lst;
-		}
-		roms = roms->childe;
-	}
-	if (!nvist->lst)
-	{
-		free(nvist);
-		return (vist);
-	}
-	return (nvist);
-}
-
-t_lst		*push_to_lst(t_lst *head, t_lst *new)
-{
-	t_lst	*tmp;
-
-	tmp = head;
-	if (!head)
-		return (new);
-	while (tmp->next)
-		tmp = tmp->next;
-	tmp->next = new;
-	new->prev = tmp;
-	return (head);
-}
-
-int			check_is_vist2(int index, t_vist *vist)
-{
-	t_vist *tmp;
-
-	tmp = vist;
-	while (tmp)
-	{
-		while (tmp->bck)
-		{
-			if (tmp->bck->index == index)
-				return (0);
-			tmp->bck = tmp->bck->next;
-		}
-		tmp = tmp->prev;
-	}
-	return (1);
-}
-
-int			check_is_vist(int index, t_stack *stack)
-{
-	t_stack	*tmp;
-
-	tmp = stack;
-	if (stack)
-	while (tmp)
-	{
-		if (tmp->index == index)
-			return (0);
-		tmp = tmp->prev;
-	}
+	if (tmp)
+		tmp->next = newp;
+	else if (!*p)
+		*p = newp;
 	return (1);
 }
